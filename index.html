@@ -659,23 +659,38 @@
     try { return JSON.parse(localStorage.getItem(CLAVE_COLA)) || []; }
     catch { return []; }
   }
+  // Devuelve true si logró guardar, false si no había espacio suficiente.
   function guardarCola(cola) {
-    localStorage.setItem(CLAVE_COLA, JSON.stringify(cola));
+    try {
+      localStorage.setItem(CLAVE_COLA, JSON.stringify(cola));
+      return true;
+    } catch (err) {
+      return false;
+    }
   }
+
+  const TIEMPO_LIMITE_ENVIO_MS = 25000;
 
   async function enviarRegistro(registro) {
     if (APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
       throw new Error('Falta configurar la URL de Apps Script en el código.');
     }
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      // text/plain evita el preflight CORS que Apps Script no maneja.
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(registro)
-    });
-    const datos = await resp.json();
-    if (!datos.ok) throw new Error(datos.error || 'Error desconocido del servidor.');
-    return datos;
+    const control = new AbortController();
+    const limite = setTimeout(() => control.abort(), TIEMPO_LIMITE_ENVIO_MS);
+    try {
+      const resp = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        // text/plain evita el preflight CORS que Apps Script no maneja.
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(registro),
+        signal: control.signal
+      });
+      const datos = await resp.json();
+      if (!datos.ok) throw new Error(datos.error || 'Error desconocido del servidor.');
+      return datos;
+    } finally {
+      clearTimeout(limite);
+    }
   }
 
   async function sincronizarCola() {
@@ -693,6 +708,23 @@
     guardarCola(restantes);
     renderHistorial();
     actualizarEstadoConexion();
+  }
+
+  // Guarda un valor en localStorage sin lanzar excepción si no hay espacio.
+  function guardarEnLocalStorage(clave, valor) {
+    try {
+      localStorage.setItem(clave, JSON.stringify(valor));
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  // Quita las fotos (pesadas) de un registro antes de guardarlo como
+  // historial local, para no llenar el almacenamiento del navegador.
+  function sinFotos(registro) {
+    const { foto_antes, foto_despues, ...resto } = registro;
+    return resto;
   }
 
   // ---------- Estado de conexión ----------
@@ -787,23 +819,32 @@
     try {
       if (navigator.onLine) {
         await enviarRegistro(registro);
-        const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
-        enviados.unshift(registro);
-        localStorage.setItem('verificacion_salones_enviados', JSON.stringify(enviados.slice(0, 50)));
+        const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]')
+          .map(sinFotos); // limpia fotos de registros guardados antes de este cambio
+        enviados.unshift(sinFotos(registro));
+        guardarEnLocalStorage('verificacion_salones_enviados', enviados.slice(0, 50));
         mensaje.textContent = 'Registro guardado correctamente.';
         mensaje.className = 'mensaje ok';
       } else {
         throw new Error('offline');
       }
     } catch (err) {
-      // Sin conexión o falló el envío: se guarda en la cola local.
+      // Sin conexión, se agotó el tiempo de espera, o falló el envío:
+      // se intenta guardar en la cola local para reintentar después.
       const cola = leerCola();
       cola.push(registro);
-      guardarCola(cola);
-      mensaje.textContent = err.message === 'offline'
-        ? 'Sin conexión: el registro quedó guardado y se enviará automáticamente.'
-        : 'No se pudo enviar ahora. El registro quedó guardado y se reintentará.';
-      mensaje.className = 'mensaje error';
+      const seGuardoLocal = guardarCola(cola);
+      if (!seGuardoLocal) {
+        mensaje.textContent = 'No hay espacio suficiente en el celular para guardar el registro sin conexión. Busca señal e intenta guardar de nuevo antes de cerrar la app.';
+        mensaje.className = 'mensaje error';
+      } else {
+        mensaje.textContent = err.name === 'AbortError'
+          ? 'La conexión está muy lenta: el registro quedó guardado y se reintentará automáticamente.'
+          : err.message === 'offline'
+            ? 'Sin conexión: el registro quedó guardado y se enviará automáticamente.'
+            : 'No se pudo enviar ahora. El registro quedó guardado y se reintentará.';
+        mensaje.className = 'mensaje error';
+      }
     }
 
     formulario.reset();
@@ -823,6 +864,18 @@
   });
 
   // ---------- Inicio ----------
+  // Limpia fotos que hayan quedado guardadas en el historial en versiones
+  // anteriores de la app, para liberar espacio del navegador.
+  (function limpiarHistorialPesado() {
+    try {
+      const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
+      const tieneFotos = enviados.some(r => r.foto_antes || r.foto_despues);
+      if (tieneFotos) {
+        guardarEnLocalStorage('verificacion_salones_enviados', enviados.map(sinFotos));
+      }
+    } catch (err) { /* si el historial está corrupto, se ignora */ }
+  })();
+
   actualizarEstadoConexion();
   renderHistorial();
   sincronizarCola();
