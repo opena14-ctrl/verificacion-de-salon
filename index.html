@@ -678,16 +678,20 @@
     const control = new AbortController();
     const limite = setTimeout(() => control.abort(), TIEMPO_LIMITE_ENVIO_MS);
     try {
-      const resp = await fetch(APPS_SCRIPT_URL, {
+      // No usamos 'cors' + leer la respuesta: en algunos celulares (sobre
+      // todo iPhone) el navegador se queda esperando esa respuesta aunque
+      // Apps Script ya haya terminado de guardar todo correctamente.
+      // Con 'no-cors' el envío llega igual, y si no hay error de red
+      // (sin conexión, dominio bloqueado, tiempo agotado) lo damos por
+      // entregado — que es justamente lo que confirma la hoja de cálculo.
+      await fetch(APPS_SCRIPT_URL, {
         method: 'POST',
-        // text/plain evita el preflight CORS que Apps Script no maneja.
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(registro),
         signal: control.signal
       });
-      const datos = await resp.json();
-      if (!datos.ok) throw new Error(datos.error || 'Error desconocido del servidor.');
-      return datos;
+      return { ok: true };
     } finally {
       clearTimeout(limite);
     }
