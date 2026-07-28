@@ -305,30 +305,37 @@
   .btn-confirmar-extra{background:var(--verde); color:#fff;}
   .btn-cancelar-extra{background:var(--gris-claro); color:var(--tinta);}
 
-  .fotos-antes-despues{
+  .fotos-extra-grid{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
+    grid-template-columns:repeat(3, 1fr);
+    gap:10px;
+    margin-bottom:12px;
   }
-  .foto-columna h3{
-    font-size:12px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--gris);
-    margin:0 0 8px;
-    font-weight:700;
-    text-align:center;
+  .fotos-extra-grid:empty{margin-bottom:0;}
+  .foto-extra-item{
+    position:relative;
+    border-radius:10px;
+    overflow:hidden;
+    border:1.5px solid var(--borde);
+    aspect-ratio:1/1;
   }
-  .foto-columna .zona-foto{padding:14px 8px;}
-  .foto-columna .boton-foto{
-    padding:10px 12px;
-    font-size:12.5px;
+  .foto-extra-item img{
     width:100%;
-    justify-content:center;
+    height:100%;
+    object-fit:cover;
+    display:block;
   }
-  .foto-columna .boton-foto svg{width:16px;height:16px;flex-shrink:0;}
-  @media (max-width:360px){
-    .fotos-antes-despues{grid-template-columns:1fr;}
+  .foto-extra-item button{
+    position:absolute;
+    top:4px; right:4px;
+    width:22px; height:22px;
+    border-radius:50%;
+    border:none;
+    background:rgba(0,0,0,0.6);
+    color:#fff;
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
   }
 </style>
 </head>
@@ -352,6 +359,10 @@
       <div class="campo">
         <label for="salon">Salón</label>
         <input type="text" id="salon" placeholder="Ej: Bloque 4 - Salón 402" required>
+      </div>
+      <div class="campo">
+        <label>Foto — antes de la visita</label>
+        <div class="zona-foto" id="zonaFotoAntes"></div>
       </div>
       <div class="campo">
         <label for="encargado">Encargado de la verificación</label>
@@ -382,17 +393,18 @@
     </div>
 
     <div class="tarjeta">
-      <h2>Foto de evidencia — antes y después</h2>
-      <div class="fotos-antes-despues">
-        <div class="foto-columna">
-          <h3>Antes</h3>
-          <div class="zona-foto" id="zonaFotoAntes"></div>
-        </div>
-        <div class="foto-columna">
-          <h3>Después</h3>
-          <div class="zona-foto" id="zonaFotoDespues"></div>
-        </div>
+      <h2>Foto de evidencia — después</h2>
+      <div class="campo" style="margin-bottom:0;">
+        <div class="zona-foto" id="zonaFotoDespues"></div>
       </div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Fotos extra</h2>
+      <p style="font-size:12.5px; color:var(--gris); margin:-6px 0 12px;">Úsalas si otra prueba requiere mostrar algo adicional.</p>
+      <div id="listaFotosExtra"></div>
+      <button type="button" class="btn-agregar-dispositivo" id="btnAgregarFotoExtra">+ Agregar foto extra</button>
+      <input type="file" id="inputFotoExtra" accept="image/*" capture="environment" style="display:none;">
     </div>
 
     <button type="submit" class="btn-guardar" id="btnGuardar">Guardar registro</button>
@@ -434,6 +446,8 @@
   let fotoDespuesBase64 = '';
   let dispositivosExtra = []; // { id, nombre, estado }
   let contadorExtra = 0;
+  let fotosExtra = []; // { id, base64 }
+  let contadorFotoExtra = 0;
 
   // ---------- Construir checklist ----------
   const listaEl = document.getElementById('listaDispositivos');
@@ -652,6 +666,58 @@
   const fotoAntes = crearManejadorFoto('zonaFotoAntes', (valor) => { fotoAntesBase64 = valor; }, () => { fotoAntesBase64 = ''; });
   const fotoDespues = crearManejadorFoto('zonaFotoDespues', (valor) => { fotoDespuesBase64 = valor; }, () => { fotoDespuesBase64 = ''; });
 
+  // ---------- Fotos extra ----------
+  const listaFotosExtraEl = document.getElementById('listaFotosExtra');
+  const btnAgregarFotoExtra = document.getElementById('btnAgregarFotoExtra');
+  const inputFotoExtra = document.getElementById('inputFotoExtra');
+
+  function renderFotosExtra() {
+    listaFotosExtraEl.innerHTML = '';
+    if (fotosExtra.length === 0) return;
+    const grid = document.createElement('div');
+    grid.className = 'fotos-extra-grid';
+    fotosExtra.forEach(item => {
+      const celda = document.createElement('div');
+      celda.className = 'foto-extra-item';
+      celda.innerHTML = `
+        <img src="${item.base64}" alt="Foto extra">
+        <button type="button" title="Quitar">&times;</button>
+      `;
+      celda.querySelector('button').addEventListener('click', () => {
+        fotosExtra = fotosExtra.filter(f => f.id !== item.id);
+        renderFotosExtra();
+      });
+      grid.appendChild(celda);
+    });
+    listaFotosExtraEl.appendChild(grid);
+  }
+
+  btnAgregarFotoExtra.addEventListener('click', () => inputFotoExtra.click());
+
+  inputFotoExtra.addEventListener('change', async (ev) => {
+    const archivo = ev.target.files[0];
+    if (!archivo) return;
+    const textoOriginal = btnAgregarFotoExtra.textContent;
+    btnAgregarFotoExtra.disabled = true;
+    btnAgregarFotoExtra.textContent = 'Procesando...';
+    const lector = new FileReader();
+    lector.onload = async () => {
+      try {
+        const conMarca = await estamparFechaHora(lector.result);
+        contadorFotoExtra += 1;
+        fotosExtra.push({ id: 'foto_extra_' + contadorFotoExtra, base64: conMarca });
+      } catch (err) {
+        contadorFotoExtra += 1;
+        fotosExtra.push({ id: 'foto_extra_' + contadorFotoExtra, base64: lector.result });
+      }
+      renderFotosExtra();
+      inputFotoExtra.value = '';
+      btnAgregarFotoExtra.disabled = false;
+      btnAgregarFotoExtra.textContent = textoOriginal;
+    };
+    lector.readAsDataURL(archivo);
+  });
+
   // ---------- Cola offline (localStorage) ----------
   const CLAVE_COLA = 'verificacion_salones_cola';
 
@@ -727,7 +793,7 @@
   // Quita las fotos (pesadas) de un registro antes de guardarlo como
   // historial local, para no llenar el almacenamiento del navegador.
   function sinFotos(registro) {
-    const { foto_antes, foto_despues, ...resto } = registro;
+    const { foto_antes, foto_despues, fotos_extra, ...resto } = registro;
     return resto;
   }
 
@@ -814,7 +880,8 @@
       otros_dispositivos: otrosDispositivosTexto,
       observaciones: document.getElementById('observaciones').value.trim(),
       foto_antes: fotoAntesBase64,
-      foto_despues: fotoDespuesBase64
+      foto_despues: fotoDespuesBase64,
+      fotos_extra: fotosExtra.map(f => f.base64)
     };
 
     btnGuardar.disabled = true;
@@ -860,6 +927,8 @@
     aseoRealizado = '';
     dispositivosExtra = [];
     renderDispositivosExtra();
+    fotosExtra = [];
+    renderFotosExtra();
 
     btnGuardar.disabled = false;
     btnGuardar.textContent = 'Guardar registro';
@@ -873,7 +942,7 @@
   (function limpiarHistorialPesado() {
     try {
       const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
-      const tieneFotos = enviados.some(r => r.foto_antes || r.foto_despues);
+      const tieneFotos = enviados.some(r => r.foto_antes || r.foto_despues || (r.fotos_extra && r.fotos_extra.length));
       if (tieneFotos) {
         guardarEnLocalStorage('verificacion_salones_enviados', enviados.map(sinFotos));
       }
