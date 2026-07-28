@@ -243,6 +243,93 @@
     font-size:13.5px;
     padding:10px 0;
   }
+
+  .dispositivo-extra{
+    padding:12px 0;
+    border-bottom:1px solid var(--gris-claro);
+  }
+  .dispositivo-extra-linea{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .quitar-extra{
+    background:none;
+    border:none;
+    color:var(--gris);
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+    padding:2px 6px;
+    flex-shrink:0;
+  }
+  .btn-agregar-dispositivo{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    width:100%;
+    background:none;
+    border:1.5px dashed var(--borde);
+    color:var(--gris);
+    padding:12px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  .form-extra{
+    background:#fbfcfa;
+    border:1.5px solid var(--borde);
+    border-radius:10px;
+    padding:12px;
+    margin-top:10px;
+  }
+  .form-extra input[type="text"]{margin-bottom:10px;}
+  .form-extra-botones{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  .form-extra-botones button{
+    flex:1;
+    border:none;
+    border-radius:8px;
+    padding:10px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn-confirmar-extra{background:var(--verde); color:#fff;}
+  .btn-cancelar-extra{background:var(--gris-claro); color:var(--tinta);}
+
+  .fotos-antes-despues{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  .foto-columna h3{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--gris);
+    margin:0 0 8px;
+    font-weight:700;
+    text-align:center;
+  }
+  .foto-columna .zona-foto{padding:14px 8px;}
+  .foto-columna .boton-foto{
+    padding:10px 12px;
+    font-size:12.5px;
+    width:100%;
+    justify-content:center;
+  }
+  .foto-columna .boton-foto svg{width:16px;height:16px;flex-shrink:0;}
+  @media (max-width:360px){
+    .fotos-antes-despues{grid-template-columns:1fr;}
+  }
 </style>
 </head>
 <body>
@@ -282,6 +369,9 @@
     <div class="tarjeta">
       <h2>Estado de dispositivos</h2>
       <div id="listaDispositivos"></div>
+      <div id="listaDispositivosExtra"></div>
+      <button type="button" class="btn-agregar-dispositivo" id="btnMostrarFormExtra">+ Agregar otro dispositivo</button>
+      <div id="formExtraContenedor"></div>
     </div>
 
     <div class="tarjeta">
@@ -292,8 +382,17 @@
     </div>
 
     <div class="tarjeta">
-      <h2>Foto de evidencia</h2>
-      <div class="zona-foto" id="zonaFoto"></div>
+      <h2>Foto de evidencia — antes y después</h2>
+      <div class="fotos-antes-despues">
+        <div class="foto-columna">
+          <h3>Antes</h3>
+          <div class="zona-foto" id="zonaFotoAntes"></div>
+        </div>
+        <div class="foto-columna">
+          <h3>Después</h3>
+          <div class="zona-foto" id="zonaFotoDespues"></div>
+        </div>
+      </div>
     </div>
 
     <button type="submit" class="btn-guardar" id="btnGuardar">Guardar registro</button>
@@ -312,7 +411,7 @@
   // CONFIGURACIÓN: pega aquí la URL de tu implementación de
   // Google Apps Script (ver Codigo_AppsScript.gs para instrucciones).
   // ============================================================
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtUAe7wachm7Q5ORP58GUtnGwrMlYY0io7Pq0auiXc6ZeiKpMApWaLTLH7oQWjPqgzoA/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZrrIHgF7FsV7DzgGiHjRBVOzMHxDt8hsBSVq775fjr2fbQani_k4_4xaHlCw5yqmiEQ/exec';
 
   // Lista de dispositivos a verificar. Para agregar uno nuevo,
   // solo añade un elemento aquí: { id: 'clave', nombre: 'Texto visible' }
@@ -331,7 +430,10 @@
 
   const estadoDispositivos = {};
   let aseoRealizado = '';
-  let fotoBase64 = '';
+  let fotoAntesBase64 = '';
+  let fotoDespuesBase64 = '';
+  let dispositivosExtra = []; // { id, nombre, estado }
+  let contadorExtra = 0;
 
   // ---------- Construir checklist ----------
   const listaEl = document.getElementById('listaDispositivos');
@@ -359,6 +461,83 @@
     listaEl.appendChild(fila);
   });
 
+  // ---------- Dispositivos personalizados (agregados por el usuario) ----------
+  const listaExtraEl = document.getElementById('listaDispositivosExtra');
+  const formExtraContenedor = document.getElementById('formExtraContenedor');
+  const btnMostrarFormExtra = document.getElementById('btnMostrarFormExtra');
+
+  function renderDispositivosExtra() {
+    listaExtraEl.innerHTML = '';
+    dispositivosExtra.forEach(item => {
+      const fila = document.createElement('div');
+      fila.className = 'dispositivo-extra';
+
+      const linea = document.createElement('div');
+      linea.className = 'dispositivo-extra-linea';
+
+      const nombre = document.createElement('div');
+      nombre.className = 'dispositivo-nombre';
+      nombre.textContent = item.nombre;
+
+      const seg = document.createElement('div');
+      seg.className = 'segmentado';
+      ESTADOS.forEach(e => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = e.etiqueta;
+        if (item.estado === e.valor) btn.className = e.clase;
+        btn.addEventListener('click', () => {
+          item.estado = e.valor;
+          [...seg.children].forEach(b => b.className = '');
+          btn.className = e.clase;
+        });
+        seg.appendChild(btn);
+      });
+
+      const btnQuitar = document.createElement('button');
+      btnQuitar.type = 'button';
+      btnQuitar.className = 'quitar-extra';
+      btnQuitar.innerHTML = '&times;';
+      btnQuitar.title = 'Quitar dispositivo';
+      btnQuitar.addEventListener('click', () => {
+        dispositivosExtra = dispositivosExtra.filter(d => d.id !== item.id);
+        renderDispositivosExtra();
+      });
+
+      linea.appendChild(nombre);
+      linea.appendChild(seg);
+      fila.appendChild(linea);
+      fila.appendChild(btnQuitar);
+      listaExtraEl.appendChild(fila);
+    });
+  }
+
+  function mostrarFormExtra() {
+    formExtraContenedor.innerHTML = `
+      <div class="form-extra">
+        <input type="text" id="inputNombreExtra" placeholder="Nombre del dispositivo (ej: Proyector)">
+        <div class="form-extra-botones">
+          <button type="button" class="btn-cancelar-extra" id="btnCancelarExtra">Cancelar</button>
+          <button type="button" class="btn-confirmar-extra" id="btnConfirmarExtra">Agregar</button>
+        </div>
+      </div>
+    `;
+    const input = document.getElementById('inputNombreExtra');
+    input.focus();
+    document.getElementById('btnCancelarExtra').addEventListener('click', () => {
+      formExtraContenedor.innerHTML = '';
+    });
+    document.getElementById('btnConfirmarExtra').addEventListener('click', () => {
+      const nombre = input.value.trim();
+      if (!nombre) { input.focus(); return; }
+      contadorExtra += 1;
+      dispositivosExtra.push({ id: 'extra_' + contadorExtra, nombre, estado: '' });
+      renderDispositivosExtra();
+      formExtraContenedor.innerHTML = '';
+    });
+  }
+  btnMostrarFormExtra.addEventListener('click', mostrarFormExtra);
+
   // ---------- Toggle aseo ----------
   document.querySelectorAll('.toggle-aseo button').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -368,48 +547,110 @@
     });
   });
 
-  // ---------- Foto ----------
-  const zonaFoto = document.getElementById('zonaFoto');
-
+  // ---------- Fotos (antes / después) ----------
   function iconoCamaraSVG() {
     return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
   }
 
-  function mostrarZonaFotoVacia() {
-    zonaFoto.innerHTML = `
-      <input type="file" id="inputFoto" accept="image/*" capture="environment" style="display:none;">
-      <button type="button" class="boton-foto" id="btnTomarFoto">
-        ${iconoCamaraSVG()}
-        Tomar foto
-      </button>
-    `;
-    document.getElementById('btnTomarFoto').addEventListener('click', () => {
-      document.getElementById('inputFoto').click();
+  // Dibuja la imagen en un canvas, la redimensiona (máx 1600px de ancho)
+  // y estampa la fecha y hora actuales como marca de agua en la esquina
+  // inferior derecha, quemada directamente en los píxeles de la foto.
+  function estamparFechaHora(dataUrlOriginal) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const ANCHO_MAX = 1600;
+        const escala = img.width > ANCHO_MAX ? ANCHO_MAX / img.width : 1;
+        const ancho = Math.round(img.width * escala);
+        const alto = Math.round(img.height * escala);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = ancho;
+        canvas.height = alto;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, ancho, alto);
+
+        const texto = new Date().toLocaleString('es-CO', {
+          day: '2-digit', month: '2-digit', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+        });
+
+        const tamanoFuente = Math.max(14, Math.round(ancho * 0.032));
+        ctx.font = `600 ${tamanoFuente}px -apple-system, Arial, sans-serif`;
+        const anchoTexto = ctx.measureText(texto).width;
+        const relleno = Math.round(tamanoFuente * 0.6);
+        const cajaAncho = anchoTexto + relleno * 2;
+        const cajaAlto = tamanoFuente + relleno * 1.6;
+        const cajaX = ancho - cajaAncho - 14;
+        const cajaY = alto - cajaAlto - 14;
+
+        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+        ctx.fillRect(cajaX, cajaY, cajaAncho, cajaAlto);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(texto, cajaX + relleno, cajaY + cajaAlto / 2);
+
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = dataUrlOriginal;
     });
-    document.getElementById('inputFoto').addEventListener('change', manejarCambioFoto);
   }
 
-  function manejarCambioFoto(ev) {
-    const archivo = ev.target.files[0];
-    if (!archivo) return;
-    const lector = new FileReader();
-    lector.onload = () => {
-      fotoBase64 = lector.result;
-      zonaFoto.innerHTML = `
-        <img src="${fotoBase64}" alt="Foto de evidencia">
-        <button type="button" class="quitar-foto" id="btnQuitarFoto">Quitar foto y tomar otra</button>
+  function crearManejadorFoto(zonaId, onCambio, onVacio) {
+    const zona = document.getElementById(zonaId);
+
+    function mostrarVacia() {
+      zona.innerHTML = `
+        <input type="file" accept="image/*" capture="environment" style="display:none;">
+        <button type="button" class="boton-foto">
+          ${iconoCamaraSVG()}
+          Tomar foto
+        </button>
       `;
-      document.getElementById('btnQuitarFoto').addEventListener('click', reiniciarFoto);
-    };
-    lector.readAsDataURL(archivo);
+      const input = zona.querySelector('input[type="file"]');
+      const boton = zona.querySelector('.boton-foto');
+      boton.addEventListener('click', () => input.click());
+      input.addEventListener('change', manejarCambio);
+      if (onVacio) onVacio();
+    }
+
+    async function manejarCambio(ev) {
+      const archivo = ev.target.files[0];
+      if (!archivo) return;
+      const lector = new FileReader();
+      lector.onload = async () => {
+        const boton = zona.querySelector('.boton-foto');
+        if (boton) { boton.disabled = true; boton.textContent = 'Procesando...'; }
+        try {
+          const conMarca = await estamparFechaHora(lector.result);
+          zona.innerHTML = `
+            <img src="${conMarca}" alt="Foto de evidencia con fecha y hora">
+            <button type="button" class="quitar-foto">Quitar y repetir</button>
+          `;
+          zona.querySelector('.quitar-foto').addEventListener('click', mostrarVacia);
+          onCambio(conMarca);
+        } catch (err) {
+          // Si algo falla al estampar, se usa la foto original sin marca.
+          const resultado = lector.result;
+          zona.innerHTML = `
+            <img src="${resultado}" alt="Foto de evidencia">
+            <button type="button" class="quitar-foto">Quitar y repetir</button>
+          `;
+          zona.querySelector('.quitar-foto').addEventListener('click', mostrarVacia);
+          onCambio(resultado);
+        }
+      };
+      lector.readAsDataURL(archivo);
+    }
+
+    mostrarVacia();
+    return { reiniciar: mostrarVacia };
   }
 
-  function reiniciarFoto() {
-    fotoBase64 = '';
-    mostrarZonaFotoVacia();
-  }
-
-  mostrarZonaFotoVacia();
+  const fotoAntes = crearManejadorFoto('zonaFotoAntes', (valor) => { fotoAntesBase64 = valor; }, () => { fotoAntesBase64 = ''; });
+  const fotoDespues = crearManejadorFoto('zonaFotoDespues', (valor) => { fotoDespuesBase64 = valor; }, () => { fotoDespuesBase64 = ''; });
 
   // ---------- Cola offline (localStorage) ----------
   const CLAVE_COLA = 'verificacion_salones_cola';
@@ -510,8 +751,8 @@
       mensaje.className = 'mensaje error';
       return;
     }
-    if (!fotoBase64) {
-      mensaje.textContent = 'Debes tomar una foto de evidencia.';
+    if (!fotoAntesBase64 || !fotoDespuesBase64) {
+      mensaje.textContent = 'Debes tomar la foto de antes y la de después.';
       mensaje.className = 'mensaje error';
       return;
     }
@@ -520,6 +761,10 @@
       mensaje.className = 'mensaje error';
       return;
     }
+
+    const otrosDispositivosTexto = dispositivosExtra
+      .map(d => `${d.nombre}: ${d.estado || 'Sin marcar'}`)
+      .join(' | ');
 
     const registro = {
       _fecha: new Date().toISOString(),
@@ -530,8 +775,10 @@
       red: estadoDispositivos['red'] || 'N/A',
       hdmi: estadoDispositivos['hdmi'] || 'N/A',
       pantalla: estadoDispositivos['pantalla'] || 'N/A',
+      otros_dispositivos: otrosDispositivosTexto,
       observaciones: document.getElementById('observaciones').value.trim(),
-      foto: fotoBase64
+      foto_antes: fotoAntesBase64,
+      foto_despues: fotoDespuesBase64
     };
 
     btnGuardar.disabled = true;
@@ -560,11 +807,14 @@
     }
 
     formulario.reset();
-    reiniciarFoto();
+    fotoAntes.reiniciar();
+    fotoDespues.reiniciar();
     document.querySelectorAll('.toggle-aseo button').forEach(b => b.classList.remove('activo'));
-    document.querySelectorAll('.segmentado button').forEach(b => b.className = '');
+    document.querySelectorAll('#listaDispositivos .segmentado button').forEach(b => b.className = '');
     Object.keys(estadoDispositivos).forEach(k => delete estadoDispositivos[k]);
     aseoRealizado = '';
+    dispositivosExtra = [];
+    renderDispositivosExtra();
 
     btnGuardar.disabled = false;
     btnGuardar.textContent = 'Guardar registro';
