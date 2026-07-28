@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Verificación de Salones</title>
+<style>
+  :root{
+    --verde: #7FB536;
+    --verde-oscuro: #5c8a22;
+    --tinta: #1c2321;
+    --gris: #6b7570;
+    --gris-claro: #e9ede8;
+    --fondo: #f6f8f5;
+    --tarjeta: #ffffff;
+    --rojo: #c0392b;
+    --ambar: #b98a1a;
+    --borde: #dbe2d8;
+    --radio: 14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--fondo);
+    color:var(--tinta);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding-bottom:40px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  header{
+    background: var(--tinta);
+    color:#fff;
+    padding:18px 20px 16px;
+    position:sticky; top:0; z-index:10;
+  }
+  header .eyebrow{
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color: var(--verde);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  header h1{
+    margin:0;
+    font-size:19px;
+    font-weight:700;
+  }
+  .estado-conexion{
+    display:flex; align-items:center; gap:6px;
+    font-size:12px; margin-top:10px; color:#c9d1c7;
+  }
+  .punto{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--verde);
+  }
+  .punto.offline{background:var(--rojo);}
+  main{
+    max-width:520px;
+    margin:0 auto;
+    padding:18px 16px 0;
+  }
+  .tarjeta{
+    background:var(--tarjeta);
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    padding:18px;
+    margin-bottom:16px;
+  }
+  .tarjeta h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    color:var(--gris);
+    margin:0 0 14px;
+    font-weight:700;
+  }
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:600;
+    margin-bottom:6px;
+    color:var(--tinta);
+  }
+  .campo{margin-bottom:16px;}
+  .campo:last-child{margin-bottom:0;}
+  input[type="text"], textarea, select{
+    width:100%;
+    padding:12px 13px;
+    border:1.5px solid var(--borde);
+    border-radius:10px;
+    font-size:15px;
+    font-family:inherit;
+    background:#fcfdfb;
+    color:var(--tinta);
+  }
+  input[type="text"]:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--verde);
+  }
+  textarea{resize:vertical; min-height:70px;}
+
+  .dispositivo{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid var(--gris-claro);
+    gap:12px;
+  }
+  .dispositivo:last-child{border-bottom:none;}
+  .dispositivo-nombre{font-size:14.5px; font-weight:600;}
+  .segmentado{
+    display:flex;
+    border:1.5px solid var(--borde);
+    border-radius:10px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .segmentado button{
+    border:none;
+    background:#fff;
+    padding:9px 12px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--gris);
+    cursor:pointer;
+    border-right:1px solid var(--borde);
+    white-space:nowrap;
+  }
+  .segmentado button:last-child{border-right:none;}
+  .segmentado button.activo-ok{background:var(--verde); color:#fff;}
+  .segmentado button.activo-falla{background:var(--rojo); color:#fff;}
+  .segmentado button.activo-na{background:var(--gris); color:#fff;}
+
+  .toggle-aseo{
+    display:flex;
+    border:1.5px solid var(--borde);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  .toggle-aseo button{
+    flex:1;
+    border:none;
+    background:#fff;
+    padding:12px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--gris);
+    cursor:pointer;
+  }
+  .toggle-aseo button:first-child{border-right:1px solid var(--borde);}
+  .toggle-aseo button.si.activo{background:var(--verde); color:#fff;}
+  .toggle-aseo button.no.activo{background:var(--rojo); color:#fff;}
+
+  .zona-foto{
+    border:2px dashed var(--borde);
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    background:#fbfcfa;
+  }
+  .zona-foto img{
+    max-width:100%;
+    border-radius:10px;
+    display:block;
+    margin:0 auto 12px;
+  }
+  .boton-foto{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    background:var(--tinta);
+    color:#fff;
+    border:none;
+    padding:12px 20px;
+    border-radius:10px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .boton-foto svg{width:18px;height:18px;}
+  .quitar-foto{
+    display:block;
+    margin:10px auto 0;
+    background:none;
+    border:none;
+    color:var(--rojo);
+    font-size:13px;
+    font-weight:600;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  .btn-guardar{
+    width:100%;
+    background:var(--verde);
+    color:#fff;
+    border:none;
+    padding:16px;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow: 0 4px 14px rgba(127,181,54,0.35);
+  }
+  .btn-guardar:active{background:var(--verde-oscuro);}
+  .btn-guardar:disabled{background:var(--gris); box-shadow:none;}
+
+  .mensaje{
+    text-align:center;
+    font-size:13px;
+    margin-top:10px;
+    min-height:18px;
+    font-weight:600;
+  }
+  .mensaje.ok{color:var(--verde-oscuro);}
+  .mensaje.error{color:var(--rojo);}
+
+  .historial-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:12px 0;
+    border-bottom:1px solid var(--gris-claro);
+    font-size:13.5px;
+  }
+  .historial-item:last-child{border-bottom:none;}
+  .historial-info b{display:block; font-size:14.5px;}
+  .historial-info span{color:var(--gris); font-size:12.5px;}
+  .chip{
+    font-size:11px;
+    font-weight:700;
+    padding:4px 9px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .chip.pendiente{background:#fdf1d9; color:var(--ambar);}
+  .chip.enviado{background:#eaf4de; color:var(--verde-oscuro);}
+  .vacio{
+    text-align:center;
+    color:var(--gris);
+    font-size:13.5px;
+    padding:10px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Areandina · Recursos Audiovisuales</div>
+  <h1>Verificación de Salones</h1>
+  <div class="estado-conexion">
+    <span class="punto" id="puntoConexion"></span>
+    <span id="textoConexion">Conectado</span>
+    <span id="contadorPendientes" style="margin-left:auto;"></span>
+  </div>
+</header>
+
+<main>
+
+  <form id="formulario">
+    <div class="tarjeta">
+      <h2>Datos generales</h2>
+      <div class="campo">
+        <label for="salon">Salón</label>
+        <input type="text" id="salon" placeholder="Ej: Bloque 4 - Salón 402" required>
+      </div>
+      <div class="campo">
+        <label for="encargado">Encargado de la verificación</label>
+        <input type="text" id="encargado" placeholder="Tu nombre" required>
+      </div>
+      <div class="campo" style="margin-bottom:0;">
+        <label>¿Se realizó el aseo de la pantalla?</label>
+        <div class="toggle-aseo">
+          <button type="button" class="si" data-valor="Sí">Sí</button>
+          <button type="button" class="no" data-valor="No">No</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Estado de dispositivos</h2>
+      <div id="listaDispositivos"></div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Observaciones</h2>
+      <div class="campo" style="margin-bottom:0;">
+        <textarea id="observaciones" placeholder="Detalles adicionales, otros dispositivos revisados, novedades..."></textarea>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Foto de evidencia</h2>
+      <div class="zona-foto" id="zonaFoto"></div>
+    </div>
+
+    <button type="submit" class="btn-guardar" id="btnGuardar">Guardar registro</button>
+    <div class="mensaje" id="mensaje"></div>
+  </form>
+
+  <div class="tarjeta" style="margin-top:24px;">
+    <h2>Registros recientes en este dispositivo</h2>
+    <div id="historial"></div>
+  </div>
+
+</main>
+
+<script>
+  // ============================================================
+  // CONFIGURACIÓN: pega aquí la URL de tu implementación de
+  // Google Apps Script (ver Codigo_AppsScript.gs para instrucciones).
+  // ============================================================
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybp7Y0UtHd73ZnJnQOqydCYJRTaPKKQMokUq1JqBpLkkzJuqxBbFOjubtkjkQAy9xj/exec';
+
+  // Lista de dispositivos a verificar. Para agregar uno nuevo,
+  // solo añade un elemento aquí: { id: 'clave', nombre: 'Texto visible' }
+  const DISPOSITIVOS = [
+    { id: 'camara',   nombre: 'Cámara' },
+    { id: 'red',      nombre: 'Punto de red' },
+    { id: 'hdmi',     nombre: 'HDMI' },
+    { id: 'pantalla', nombre: 'Pantalla / TV' },
+  ];
+
+  const ESTADOS = [
+    { valor: 'Funciona',    etiqueta: 'Funciona', clase: 'activo-ok' },
+    { valor: 'No funciona', etiqueta: 'Falla',     clase: 'activo-falla' },
+    { valor: 'N/A',         etiqueta: 'N/A',       clase: 'activo-na' },
+  ];
+
+  const estadoDispositivos = {};
+  let aseoRealizado = '';
+  let fotoBase64 = '';
+
+  // ---------- Construir checklist ----------
+  const listaEl = document.getElementById('listaDispositivos');
+  DISPOSITIVOS.forEach(d => {
+    const fila = document.createElement('div');
+    fila.className = 'dispositivo';
+    const nombre = document.createElement('div');
+    nombre.className = 'dispositivo-nombre';
+    nombre.textContent = d.nombre;
+    const seg = document.createElement('div');
+    seg.className = 'segmentado';
+    ESTADOS.forEach(e => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = e.etiqueta;
+      btn.addEventListener('click', () => {
+        estadoDispositivos[d.id] = e.valor;
+        [...seg.children].forEach(b => b.className = '');
+        btn.className = e.clase;
+      });
+      seg.appendChild(btn);
+    });
+    fila.appendChild(nombre);
+    fila.appendChild(seg);
+    listaEl.appendChild(fila);
+  });
+
+  // ---------- Toggle aseo ----------
+  document.querySelectorAll('.toggle-aseo button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      aseoRealizado = btn.dataset.valor;
+      document.querySelectorAll('.toggle-aseo button').forEach(b => b.classList.remove('activo'));
+      btn.classList.add('activo');
+    });
+  });
+
+  // ---------- Foto ----------
+  const zonaFoto = document.getElementById('zonaFoto');
+
+  function iconoCamaraSVG() {
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>';
+  }
+
+  function mostrarZonaFotoVacia() {
+    zonaFoto.innerHTML = `
+      <input type="file" id="inputFoto" accept="image/*" capture="environment" style="display:none;">
+      <button type="button" class="boton-foto" id="btnTomarFoto">
+        ${iconoCamaraSVG()}
+        Tomar foto
+      </button>
+    `;
+    document.getElementById('btnTomarFoto').addEventListener('click', () => {
+      document.getElementById('inputFoto').click();
+    });
+    document.getElementById('inputFoto').addEventListener('change', manejarCambioFoto);
+  }
+
+  function manejarCambioFoto(ev) {
+    const archivo = ev.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+      fotoBase64 = lector.result;
+      zonaFoto.innerHTML = `
+        <img src="${fotoBase64}" alt="Foto de evidencia">
+        <button type="button" class="quitar-foto" id="btnQuitarFoto">Quitar foto y tomar otra</button>
+      `;
+      document.getElementById('btnQuitarFoto').addEventListener('click', reiniciarFoto);
+    };
+    lector.readAsDataURL(archivo);
+  }
+
+  function reiniciarFoto() {
+    fotoBase64 = '';
+    mostrarZonaFotoVacia();
+  }
+
+  mostrarZonaFotoVacia();
+
+  // ---------- Cola offline (localStorage) ----------
+  const CLAVE_COLA = 'verificacion_salones_cola';
+
+  function leerCola() {
+    try { return JSON.parse(localStorage.getItem(CLAVE_COLA)) || []; }
+    catch { return []; }
+  }
+  function guardarCola(cola) {
+    localStorage.setItem(CLAVE_COLA, JSON.stringify(cola));
+  }
+
+  async function enviarRegistro(registro) {
+    if (APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
+      throw new Error('Falta configurar la URL de Apps Script en el código.');
+    }
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      // text/plain evita el preflight CORS que Apps Script no maneja.
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(registro)
+    });
+    const datos = await resp.json();
+    if (!datos.ok) throw new Error(datos.error || 'Error desconocido del servidor.');
+    return datos;
+  }
+
+  async function sincronizarCola() {
+    if (!navigator.onLine) return;
+    let cola = leerCola();
+    if (cola.length === 0) return actualizarEstadoConexion();
+    const restantes = [];
+    for (const registro of cola) {
+      try {
+        await enviarRegistro(registro);
+      } catch (err) {
+        restantes.push(registro);
+      }
+    }
+    guardarCola(restantes);
+    renderHistorial();
+    actualizarEstadoConexion();
+  }
+
+  // ---------- Estado de conexión ----------
+  function actualizarEstadoConexion() {
+    const punto = document.getElementById('puntoConexion');
+    const texto = document.getElementById('textoConexion');
+    const contador = document.getElementById('contadorPendientes');
+    const online = navigator.onLine;
+    punto.classList.toggle('offline', !online);
+    texto.textContent = online ? 'Conectado' : 'Sin conexión — se guardará localmente';
+    const pendientes = leerCola().length;
+    contador.textContent = pendientes > 0 ? `${pendientes} pendiente(s)` : '';
+  }
+  window.addEventListener('online', sincronizarCola);
+  window.addEventListener('offline', actualizarEstadoConexion);
+
+  // ---------- Historial local ----------
+  function renderHistorial() {
+    const cont = document.getElementById('historial');
+    const cola = leerCola();
+    const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
+    const todos = [...cola.map(r => ({...r, _estado: 'pendiente'})), ...enviados.map(r => ({...r, _estado: 'enviado'}))]
+      .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
+      .slice(0, 15);
+
+    if (todos.length === 0) {
+      cont.innerHTML = '<div class="vacio">Todavía no hay registros en este dispositivo.</div>';
+      return;
+    }
+    cont.innerHTML = todos.map(r => `
+      <div class="historial-item">
+        <div class="historial-info">
+          <b>${r.salon || 'Sin salón'}</b>
+          <span>${r._fecha ? new Date(r._fecha).toLocaleString('es-CO') : ''} · ${r.encargado || ''}</span>
+        </div>
+        <span class="chip ${r._estado}">${r._estado === 'pendiente' ? 'Pendiente' : 'Enviado'}</span>
+      </div>
+    `).join('');
+  }
+
+  // ---------- Envío del formulario ----------
+  const formulario = document.getElementById('formulario');
+  const btnGuardar = document.getElementById('btnGuardar');
+  const mensaje = document.getElementById('mensaje');
+
+  formulario.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    mensaje.textContent = '';
+    mensaje.className = 'mensaje';
+
+    const salon = document.getElementById('salon').value.trim();
+    const encargado = document.getElementById('encargado').value.trim();
+
+    if (!salon || !encargado) {
+      mensaje.textContent = 'Completa el salón y el encargado.';
+      mensaje.className = 'mensaje error';
+      return;
+    }
+    if (!fotoBase64) {
+      mensaje.textContent = 'Debes tomar una foto de evidencia.';
+      mensaje.className = 'mensaje error';
+      return;
+    }
+    if (!aseoRealizado) {
+      mensaje.textContent = 'Indica si se realizó el aseo.';
+      mensaje.className = 'mensaje error';
+      return;
+    }
+
+    const registro = {
+      _fecha: new Date().toISOString(),
+      salon,
+      encargado,
+      aseo: aseoRealizado,
+      camara: estadoDispositivos['camara'] || 'N/A',
+      red: estadoDispositivos['red'] || 'N/A',
+      hdmi: estadoDispositivos['hdmi'] || 'N/A',
+      pantalla: estadoDispositivos['pantalla'] || 'N/A',
+      observaciones: document.getElementById('observaciones').value.trim(),
+      foto: fotoBase64
+    };
+
+    btnGuardar.disabled = true;
+    btnGuardar.textContent = 'Guardando...';
+
+    try {
+      if (navigator.onLine) {
+        await enviarRegistro(registro);
+        const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
+        enviados.unshift(registro);
+        localStorage.setItem('verificacion_salones_enviados', JSON.stringify(enviados.slice(0, 50)));
+        mensaje.textContent = 'Registro guardado correctamente.';
+        mensaje.className = 'mensaje ok';
+      } else {
+        throw new Error('offline');
+      }
+    } catch (err) {
+      // Sin conexión o falló el envío: se guarda en la cola local.
+      const cola = leerCola();
+      cola.push(registro);
+      guardarCola(cola);
+      mensaje.textContent = err.message === 'offline'
+        ? 'Sin conexión: el registro quedó guardado y se enviará automáticamente.'
+        : 'No se pudo enviar ahora. El registro quedó guardado y se reintentará.';
+      mensaje.className = 'mensaje error';
+    }
+
+    formulario.reset();
+    reiniciarFoto();
+    document.querySelectorAll('.toggle-aseo button').forEach(b => b.classList.remove('activo'));
+    document.querySelectorAll('.segmentado button').forEach(b => b.className = '');
+    Object.keys(estadoDispositivos).forEach(k => delete estadoDispositivos[k]);
+    aseoRealizado = '';
+
+    btnGuardar.disabled = false;
+    btnGuardar.textContent = 'Guardar registro';
+    actualizarEstadoConexion();
+    renderHistorial();
+  });
+
+  // ---------- Inicio ----------
+  actualizarEstadoConexion();
+  renderHistorial();
+  sincronizarCola();
+  setInterval(sincronizarCola, 30000);
+</script>
+
+</body>
+</html>
