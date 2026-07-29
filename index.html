@@ -358,10 +358,10 @@
       <h2>Datos generales</h2>
       <div class="campo">
         <label for="salon">Salón</label>
-        <input type="text" id="salon" placeholder="Ej: Bloque A - Salón 402" required>
+        <input type="text" id="salon" placeholder="Ej: Bloque 4 - Salón 402" required>
       </div>
       <div class="campo">
-        <label>FOTO DE EVIDENCIA - ANTES</label>
+        <label>Foto — antes de la visita</label>
         <div class="zona-foto" id="zonaFotoAntes"></div>
       </div>
       <div class="campo">
@@ -401,7 +401,7 @@
 
     <div class="tarjeta">
       <h2>Fotos extra</h2>
-      <p style="font-size:12.5px; color:var(--gris); margin:-6px 0 12px;">Úsar si requieres evidencia adicionales.</p>
+      <p style="font-size:12.5px; color:var(--gris); margin:-6px 0 12px;">Úsalas si otra prueba requiere mostrar algo adicional.</p>
       <div id="listaFotosExtra"></div>
       <button type="button" class="btn-agregar-dispositivo" id="btnAgregarFotoExtra">+ Agregar foto extra</button>
       <input type="file" id="inputFotoExtra" accept="image/*" capture="environment" style="display:none;">
@@ -423,7 +423,7 @@
   // CONFIGURACIÓN: pega aquí la URL de tu implementación de
   // Google Apps Script (ver Codigo_AppsScript.gs para instrucciones).
   // ============================================================
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxZrrIHgF7FsV7DzgGiHjRBVOzMHxDt8hsBSVq775fjr2fbQani_k4_4xaHlCw5yqmiEQ/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxx_pcLCgA238sUcJoWCqwKrj22Eyoeu2nt1K7TaTWwsWQmZgzB4f4Br8TI-nF0ufItzQ/exec';
 
   // Lista de dispositivos a verificar. Para agregar uno nuevo,
   // solo añade un elemento aquí: { id: 'clave', nombre: 'Texto visible' }
@@ -444,6 +444,8 @@
   let aseoRealizado = '';
   let fotoAntesBase64 = '';
   let fotoDespuesBase64 = '';
+  let fotoAntesMomento = null;
+  let fotoDespuesMomento = null;
   let dispositivosExtra = []; // { id, nombre, estado }
   let contadorExtra = 0;
   let fotosExtra = []; // { id, base64 }
@@ -663,8 +665,32 @@
     return { reiniciar: mostrarVacia };
   }
 
-  const fotoAntes = crearManejadorFoto('zonaFotoAntes', (valor) => { fotoAntesBase64 = valor; }, () => { fotoAntesBase64 = ''; });
-  const fotoDespues = crearManejadorFoto('zonaFotoDespues', (valor) => { fotoDespuesBase64 = valor; }, () => { fotoDespuesBase64 = ''; });
+  const fotoAntes = crearManejadorFoto('zonaFotoAntes',
+    (valor) => { fotoAntesBase64 = valor; fotoAntesMomento = Date.now(); },
+    () => { fotoAntesBase64 = ''; fotoAntesMomento = null; }
+  );
+  const fotoDespues = crearManejadorFoto('zonaFotoDespues',
+    (valor) => { fotoDespuesBase64 = valor; fotoDespuesMomento = Date.now(); },
+    () => { fotoDespuesBase64 = ''; fotoDespuesMomento = null; }
+  );
+
+  // Calcula cuánto pasó entre la foto de "antes" y la de "después".
+  // Devuelve un texto legible (ej: "8 min 12 s") y los segundos totales.
+  function calcularTiempoEntreFotos() {
+    if (!fotoAntesMomento || !fotoDespuesMomento) {
+      return { texto: '', segundos: '' };
+    }
+    const diffMs = Math.max(0, fotoDespuesMomento - fotoAntesMomento);
+    const totalSegundos = Math.round(diffMs / 1000);
+    const horas = Math.floor(totalSegundos / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+    let texto = '';
+    if (horas > 0) texto += `${horas} h `;
+    if (minutos > 0 || horas > 0) texto += `${minutos} min `;
+    texto += `${segundos} s`;
+    return { texto: texto.trim(), segundos: totalSegundos };
+  }
 
   // ---------- Fotos extra ----------
   const listaFotosExtraEl = document.getElementById('listaFotosExtra');
@@ -868,6 +894,8 @@
       .map(d => `${d.nombre}: ${d.estado || 'Sin marcar'}`)
       .join(' | ');
 
+    const tiempoEntreFotos = calcularTiempoEntreFotos();
+
     const registro = {
       _fecha: new Date().toISOString(),
       salon,
@@ -881,7 +909,9 @@
       observaciones: document.getElementById('observaciones').value.trim(),
       foto_antes: fotoAntesBase64,
       foto_despues: fotoDespuesBase64,
-      fotos_extra: fotosExtra.map(f => f.base64)
+      fotos_extra: fotosExtra.map(f => f.base64),
+      tiempo_entre_fotos: tiempoEntreFotos.texto,
+      tiempo_entre_fotos_segundos: tiempoEntreFotos.segundos
     };
 
     btnGuardar.disabled = true;
@@ -921,6 +951,8 @@
     formulario.reset();
     fotoAntes.reiniciar();
     fotoDespues.reiniciar();
+    fotoAntesMomento = null;
+    fotoDespuesMomento = null;
     document.querySelectorAll('.toggle-aseo button').forEach(b => b.classList.remove('activo'));
     document.querySelectorAll('#listaDispositivos .segmentado button').forEach(b => b.className = '');
     Object.keys(estadoDispositivos).forEach(k => delete estadoDispositivos[k]);
