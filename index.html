@@ -88,7 +88,7 @@
   }
   .tarjeta{
     background:var(--tarjeta);
-    border:1px solid var(--borde);
+    border:1.5px solid var(--magenta);
     border-radius:var(--radio);
     padding:18px;
     margin-bottom:16px;
@@ -384,7 +384,8 @@
       <h2>Datos generales</h2>
       <div class="campo">
         <label for="salon">Salón</label>
-        <input type="text" id="salon" placeholder="Ej: Bloque 4 - Salón 402" required>
+        <input type="text" id="salon" list="listaSalones" placeholder="Escribe o elige un salón" required autocomplete="off">
+        <datalist id="listaSalones"></datalist>
       </div>
       <div class="campo">
         <label>Foto — antes de la visita</label>
@@ -453,6 +454,24 @@
 
   // Lista de dispositivos a verificar. Para agregar uno nuevo,
   // solo añade un elemento aquí: { id: 'clave', nombre: 'Texto visible' }
+  // Lista cerrada de salones. Para agregar, quitar o renombrar uno,
+  // solo edita este arreglo.
+  const SALONES = [
+    'VA208', 'VA203', 'VA204', 'VA205', 'VA206', 'VA209', 'VA210', 'VA215',
+    'VA216', 'VA217', 'VA218', 'VB219', 'VB220', 'VB221', 'VB222', 'VB223',
+    'VB224', 'VB225', 'VA305', 'VA307', 'VA309', 'VA316', 'VA319', 'VB320',
+    'VB321', 'VB322', 'VB323', 'VB324', 'VB325', 'VB326', 'VB327', 'VB501',
+    'VB502', 'VB503', 'VB504', 'VB505', 'VB506', 'VB507', 'VB508', 'VB509',
+    'VB510', 'VB511', 'VB512', 'VB513', 'VB514', 'VB515', 'VB703', 'VB702',
+    'VB701', 'AU_COLAB 7', 'VB603', 'VB602', 'VB601', 'AU_COLAB 6'
+  ];
+  const listaSalones = document.getElementById('listaSalones');
+  SALONES.forEach(nombre => {
+    const opcion = document.createElement('option');
+    opcion.value = nombre;
+    listaSalones.appendChild(opcion);
+  });
+
   const DISPOSITIVOS = [
     { id: 'camara',   nombre: 'Cámara' },
     { id: 'red',      nombre: 'Punto de red' },
@@ -601,7 +620,7 @@
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        const ANCHO_MAX = 1600;
+        const ANCHO_MAX = 1280;
         const escala = img.width > ANCHO_MAX ? ANCHO_MAX / img.width : 1;
         const ancho = Math.round(img.width * escala);
         const alto = Math.round(img.height * escala);
@@ -633,7 +652,7 @@
         ctx.textBaseline = 'middle';
         ctx.fillText(texto, cajaX + relleno, cajaY + cajaAlto / 2);
 
-        resolve(canvas.toDataURL('image/jpeg', 0.85));
+        resolve(canvas.toDataURL('image/jpeg', 0.75));
       };
       img.onerror = reject;
       img.src = dataUrlOriginal;
@@ -787,7 +806,7 @@
     }
   }
 
-  const TIEMPO_LIMITE_ENVIO_MS = 25000;
+  const TIEMPO_LIMITE_ENVIO_MS = 60000;
 
   async function enviarRegistro(registro) {
     if (APPS_SCRIPT_URL.includes('PEGA_AQUI')) {
@@ -923,6 +942,7 @@
     const tiempoEntreFotos = calcularTiempoEntreFotos();
 
     const registro = {
+      _id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10),
       _fecha: new Date().toISOString(),
       salon,
       encargado,
@@ -958,19 +978,28 @@
     } catch (err) {
       // Sin conexión, se agotó el tiempo de espera, o falló el envío:
       // se intenta guardar en la cola local para reintentar después.
+      // (El registro lleva un ID único, así que si en realidad sí se
+      // había guardado del lado del servidor, el reintento no duplica
+      // la fila en el Sheet — el backend lo detecta y lo ignora.)
+      const LIMITE_COLA = 8;
       const cola = leerCola();
-      cola.push(registro);
-      const seGuardoLocal = guardarCola(cola);
-      if (!seGuardoLocal) {
-        mensaje.textContent = 'No hay espacio suficiente en el celular para guardar el registro sin conexión. Busca señal e intenta guardar de nuevo antes de cerrar la app.';
+      if (cola.length >= LIMITE_COLA) {
+        mensaje.textContent = `Ya hay ${LIMITE_COLA} registros esperando para enviarse y no caben más en el celular. Busca señal, espera a que se envíen (revisa el punto de conexión arriba) y vuelve a intentar este registro.`;
         mensaje.className = 'mensaje error';
       } else {
-        mensaje.textContent = err.name === 'AbortError'
-          ? 'La conexión está muy lenta: el registro quedó guardado y se reintentará automáticamente.'
-          : err.message === 'offline'
-            ? 'Sin conexión: el registro quedó guardado y se enviará automáticamente.'
-            : 'No se pudo enviar ahora. El registro quedó guardado y se reintentará.';
-        mensaje.className = 'mensaje error';
+        cola.push(registro);
+        const seGuardoLocal = guardarCola(cola);
+        if (!seGuardoLocal) {
+          mensaje.textContent = 'No hay espacio suficiente en el celular para guardar el registro sin conexión. Es probable que ya se haya enviado bien — verifica el Excel. Si no aparece, busca señal e intenta de nuevo.';
+          mensaje.className = 'mensaje error';
+        } else {
+          mensaje.textContent = err.name === 'AbortError'
+            ? 'La conexión está muy lenta: es probable que igual se haya guardado bien (verifica el Excel). También quedó una copia local por si acaso.'
+            : err.message === 'offline'
+              ? 'Sin conexión: el registro quedó guardado y se enviará automáticamente.'
+              : 'No se pudo enviar ahora. El registro quedó guardado y se reintentará.';
+          mensaje.className = 'mensaje error';
+        }
       }
     }
 
