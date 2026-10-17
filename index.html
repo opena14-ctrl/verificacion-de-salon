@@ -1460,7 +1460,7 @@
   });
 
   // ---------- Firma en canvas (dibujar con dedo o mouse) ----------
-  function montarFirma(canvas, onCambio) {
+  function montarFirma(canvas, onCambio, firmaInicial) {
     const ctx = canvas.getContext('2d');
     let dibujando = false;
     let hayTrazo = false;
@@ -1522,6 +1522,16 @@
 
     ajustarTamano();
     window.addEventListener('resize', ajustarTamano);
+
+    if (firmaInicial) {
+      const imgInicial = new Image();
+      imgInicial.onload = () => {
+        const r = canvas.getBoundingClientRect();
+        ctx.drawImage(imgInicial, 0, 0, r.width, r.height);
+        hayTrazo = true;
+      };
+      imgInicial.src = firmaInicial;
+    }
 
     return {
       limpiar() {
@@ -1630,20 +1640,28 @@
       div.querySelectorAll('.toggle-resultado button').forEach(btn => {
         btn.addEventListener('click', () => {
           prueba.resultado = btn.dataset.valor;
-          renderPruebas();
+          div.querySelectorAll('.toggle-resultado button').forEach(b => b.classList.remove('activo'));
+          btn.classList.add('activo');
+          div.querySelector('.campo-reprog').style.display = prueba.resultado === 'Fallida' ? '' : 'none';
         });
       });
 
       // Foto de evidencia, con la misma marca de agua de fecha/hora
       // que usan las fotos del módulo de Registro.
-      crearManejadorFoto(
+      let renderInicial = true;
+      const manejadorFoto = crearManejadorFoto(
         'zonaFotoPrueba_' + prueba.id,
         dataUrl => { prueba.foto = dataUrl; },
-        () => { prueba.foto = ''; }
+        () => { if (!renderInicial) prueba.foto = ''; }
       );
+      renderInicial = false;
       if (prueba.foto) {
         const zona = document.getElementById('zonaFotoPrueba_' + prueba.id);
-        zona.innerHTML = `<img src="${prueba.foto}" alt="Evidencia de la prueba">`;
+        zona.innerHTML = `
+          <img src="${prueba.foto}" alt="Evidencia de la prueba">
+          <button type="button" class="quitar-foto">Quitar y repetir</button>
+        `;
+        zona.querySelector('.quitar-foto').addEventListener('click', () => manejadorFoto.reiniciar());
       }
 
       const nombreInput = document.getElementById('nombrePrueba_' + prueba.id);
@@ -1651,7 +1669,7 @@
       nombreInput.addEventListener('input', ev => { prueba.nombreFirma = ev.target.value; });
 
       const canvas = document.getElementById('canvasPrueba_' + prueba.id);
-      const control = montarFirma(canvas, dataUrl => { prueba.firmaDataUrl = dataUrl; });
+      const control = montarFirma(canvas, dataUrl => { prueba.firmaDataUrl = dataUrl; }, prueba.firmaDataUrl);
       div.querySelector(`[data-limpiar="canvasPrueba_${prueba.id}"]`)
          .addEventListener('click', () => control.limpiar());
     });
