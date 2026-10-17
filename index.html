@@ -363,13 +363,192 @@
     line-height:1;
     cursor:pointer;
   }
+
+  /* ---------- Selector de pestañas (Registro / Escenario de Prueba) ---------- */
+  .tabs{
+    display:flex;
+    gap:8px;
+    padding:12px 16px 0;
+  }
+  .tabs button{
+    flex:1;
+    border:1.5px solid var(--borde);
+    background:#fff;
+    color:var(--gris);
+    font-weight:700;
+    font-size:13.5px;
+    padding:11px 8px;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .tabs button.activo{
+    background:var(--tinta);
+    color:#fff;
+    border-color:var(--tinta);
+  }
+
+  /* ---------- Escenario de Prueba: banda verde de sección (estilo acta) ---------- */
+  .banda-fase{
+    background:var(--verde);
+    color:#fff;
+    text-align:center;
+    padding:10px 14px;
+    border-radius:10px;
+    margin-bottom:14px;
+  }
+  .banda-fase b{font-size:15px; display:block;}
+  .banda-fase span{font-size:12px; opacity:.95;}
+  .banda-seccion{
+    background:var(--gris-claro);
+    color:var(--tinta);
+    font-weight:700;
+    font-size:13px;
+    padding:8px 12px;
+    border-radius:8px;
+    margin:16px 0 10px;
+  }
+
+  .radio-intervencion{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .radio-intervencion label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:14px;
+    font-weight:600;
+    padding:10px 12px;
+    border:1.5px solid var(--borde);
+    border-radius:10px;
+    cursor:pointer;
+  }
+  .radio-intervencion label.marcado{
+    border-color:var(--verde);
+    background:#f3f9ec;
+  }
+  .radio-intervencion input{width:16px; height:16px; accent-color:var(--verde);}
+
+  /* ---------- Ítems de checklist (infraestructura / hardware) con 4 estados ---------- */
+  .item-checklist{
+    padding:12px 0;
+    border-bottom:1px solid var(--gris-claro);
+  }
+  .item-checklist:last-child{border-bottom:none;}
+  .item-checklist-linea{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .item-checklist-nombre{font-size:14px; font-weight:600; flex:1;}
+  .segmentado4{
+    display:flex;
+    border:1.5px solid var(--borde);
+    border-radius:9px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .segmentado4 button{
+    border:none;
+    background:#fff;
+    padding:8px 9px;
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--gris);
+    border-right:1px solid var(--borde);
+    cursor:pointer;
+  }
+  .segmentado4 button:last-child{border-right:none;}
+  .segmentado4 button.activo-nuevo{background:#3b7dd8; color:#fff;}
+  .segmentado4 button.activo-bueno{background:var(--verde); color:#fff;}
+  .segmentado4 button.activo-malo{background:#c0392b; color:#fff;}
+  .segmentado4 button.activo-otro{background:var(--gris); color:#fff;}
+  .item-checklist input[type="text"]{
+    font-size:13px;
+    padding:9px 10px;
+  }
+
+  /* ---------- Firma en pantalla ---------- */
+  .zona-firma{
+    border:1.5px dashed var(--borde);
+    border-radius:10px;
+    background:#fbfcfa;
+    touch-action:none;
+  }
+  .zona-firma canvas{
+    width:100%;
+    height:150px;
+    display:block;
+    touch-action:none;
+  }
+  .firma-botones{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:6px;
+  }
+  .firma-botones button{
+    background:none;
+    border:none;
+    color:var(--gris);
+    font-size:12.5px;
+    font-weight:700;
+    text-decoration:underline;
+    cursor:pointer;
+  }
+
+  /* ---------- Bloques de prueba (Fase II) ---------- */
+  .bloque-prueba{
+    border:1.5px solid var(--borde);
+    border-radius:12px;
+    padding:14px;
+    margin-bottom:14px;
+    position:relative;
+  }
+  .bloque-prueba-titulo{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .bloque-prueba-titulo b{font-size:14px;}
+  .btn-quitar-prueba{
+    background:none;
+    border:none;
+    color:#c0392b;
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .toggle-resultado button{
+    flex:1;
+  }
+  .toggle-resultado .exitosa.activo{background:var(--verde); color:#fff;}
+  .toggle-resultado .fallida.activo{background:#c0392b; color:#fff;}
+  .btn-agregar-prueba{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    width:100%;
+    background:none;
+    border:1.5px dashed var(--borde);
+    color:var(--gris);
+    padding:12px;
+    border-radius:10px;
+    font-size:13.5px;
+    font-weight:700;
+    cursor:pointer;
+  }
 </style>
 </head>
 <body>
 
 <header>
   <div class="eyebrow">Areandina · Recursos Audiovisuales</div>
-  <h1>Verificación de Salones</h1>
+  <h1 id="tituloApp">Verificación de Salones</h1>
   <div class="estado-conexion">
     <span class="punto" id="puntoConexion"></span>
     <span id="textoConexion">Conectado</span>
@@ -377,8 +556,14 @@
   </div>
 </header>
 
+<div class="tabs">
+  <button type="button" id="tabRegistro" class="activo">Registro</button>
+  <button type="button" id="tabEscenario">Escenario de Prueba</button>
+</div>
+
 <main>
 
+  <div id="vistaRegistro">
   <form id="formulario">
     <div class="tarjeta">
       <h2>Datos generales</h2>
@@ -442,6 +627,102 @@
     <h2>Registros recientes en este dispositivo</h2>
     <div id="historial"></div>
   </div>
+  </div><!-- /vistaRegistro -->
+
+  <!-- ============================================================
+       VISTA: ESCENARIO DE PRUEBA (acta Fase I + Fase II)
+       ============================================================ -->
+  <div id="vistaEscenario" style="display:none;">
+  <form id="formEscenario">
+
+    <div class="tarjeta">
+      <h2>Datos del acta</h2>
+
+      <label for="esc_acta">N° de Acta</label>
+      <input type="text" id="esc_acta" placeholder="Se asigna automáticamente" readonly>
+
+      <label for="esc_fecha">Fecha</label>
+      <input type="date" id="esc_fecha" required>
+
+      <label for="esc_ubicacion">Ubicación <span style="color:#c0392b;">*</span></label>
+      <input type="text" id="esc_ubicacion" list="listaSalones" placeholder="Ej: Bloque A - Salón 302" required>
+
+      <label for="esc_tipologia">Tipología de Espacio</label>
+      <input type="text" id="esc_tipologia" list="listaTipologias" placeholder="Ej: Aula de clase, Laboratorio, Auditorio">
+
+      <label for="esc_planta">Planta Física</label>
+      <input type="text" id="esc_planta" placeholder="Responsable / área de planta física">
+
+      <label for="esc_tecnologia">Tecnología</label>
+      <input type="text" id="esc_tecnologia" placeholder="Responsable / área de tecnología">
+
+      <label for="esc_coordinador">Coordinador del área</label>
+      <input type="text" id="esc_coordinador" list="listaCoordinadores" placeholder="Nombre del coordinador">
+
+      <label for="esc_proveedor">Proveedor</label>
+      <input type="text" id="esc_proveedor" list="listaProveedores" placeholder="Nombre del proveedor">
+    </div>
+
+    <datalist id="listaSalones"></datalist>
+    <datalist id="listaTipologias"></datalist>
+    <datalist id="listaCoordinadores"></datalist>
+    <datalist id="listaProveedores"></datalist>
+
+    <div class="tarjeta">
+      <div class="banda-fase">
+        <b>FASE I</b>
+        <span>Análisis de implementación: verificación de espacios, estándares de instalación, ubicación y uso de los recursos audiovisuales.</span>
+      </div>
+
+      <label>Tipo de intervención <span style="color:#c0392b;">*</span></label>
+      <div class="radio-intervencion" id="grupoIntervencion">
+        <label><input type="radio" name="intervencion" value="Escenario Nuevo"> Escenario Nuevo</label>
+        <label><input type="radio" name="intervencion" value="Reubicación"> Reubicación</label>
+        <label><input type="radio" name="intervencion" value="Mejoramiento"> Mejoramiento</label>
+        <label><input type="radio" name="intervencion" value="Pruebas"> Pruebas</label>
+      </div>
+    </div>
+
+    <div class="tarjeta">
+      <div class="banda-seccion">1. Infraestructura</div>
+      <div id="listaInfraestructura"></div>
+      <button type="button" class="btn-agregar-dispositivo" id="btnAgregarInfra">+ Agregar ítem de infraestructura</button>
+    </div>
+
+    <div class="tarjeta">
+      <div class="banda-seccion">2. Hardware Tecnológica</div>
+      <div id="listaHardware"></div>
+      <button type="button" class="btn-agregar-dispositivo" id="btnAgregarHardware">+ Agregar ítem de hardware</button>
+    </div>
+
+    <div class="tarjeta">
+      <div class="banda-seccion">3. Observaciones Importantes</div>
+      <textarea id="esc_observaciones" rows="6" placeholder="Observaciones generales del escenario, hallazgos, recomendaciones..."></textarea>
+    </div>
+
+    <div class="tarjeta">
+      <div class="banda-fase">
+        <b>FASE II</b>
+        <span>Escenario de pruebas: funcionamiento. Debe diligenciarse cada vez que se realice una intervención en el espacio durante el año.</span>
+      </div>
+      <div id="listaPruebas"></div>
+      <button type="button" class="btn-agregar-prueba" id="btnAgregarPrueba">+ Agregar prueba</button>
+    </div>
+
+    <div class="tarjeta">
+      <h2>Firmas</h2>
+      <div id="listaFirmas"></div>
+    </div>
+
+    <button type="submit" class="btn-guardar" id="btnGuardarEscenario">Guardar acta</button>
+    <div class="mensaje" id="mensajeEscenario"></div>
+  </form>
+
+  <div class="tarjeta" style="margin-top:24px;">
+    <h2>Actas recientes en este dispositivo</h2>
+    <div id="historialEscenario"></div>
+  </div>
+  </div><!-- /vistaEscenario -->
 
 </main>
 
@@ -885,7 +1166,9 @@
   // ---------- Historial local ----------
   function renderHistorial() {
     const cont = document.getElementById('historial');
-    const cola = leerCola();
+    // Las actas de Escenario de Prueba comparten la misma cola de envío,
+    // pero tienen su propio historial en la otra pestaña.
+    const cola = leerCola().filter(r => r._tipo !== 'escenario_prueba');
     const enviados = JSON.parse(localStorage.getItem('verificacion_salones_enviados') || '[]');
     const todos = [...cola.map(r => ({...r, _estado: 'pendiente'})), ...enviados.map(r => ({...r, _estado: 'enviado'}))]
       .sort((a, b) => new Date(b._fecha) - new Date(a._fecha))
@@ -1040,6 +1323,577 @@
   renderHistorial();
   sincronizarCola();
   setInterval(sincronizarCola, 30000);
+
+  // ============================================================
+  //  MÓDULO: ESCENARIO DE PRUEBA (acta Fase I + Fase II)
+  //  Reutiliza estamparFechaHora(), enviarRegistro() y la cola
+  //  offline del módulo de Registro.
+  // ============================================================
+
+  // Ítems que vienen preimpresos en el formato oficial.
+  const ITEMS_INFRAESTRUCTURA = [
+    'Puntos Eléctricos Regulados',
+    'Puntos Eléctricos No regulados',
+    'Puntos de Red',
+    'Mobiliario (Atril - Escritorio)',
+    'Punto red Wifi'
+  ];
+  const ITEMS_HARDWARE = [
+    'Pantalla',
+    'Equipo de Cómputo',
+    'Sonido',
+    'Luces'
+  ];
+  const FIRMAS_ACTA = [
+    { id: 'subdirector', rotulo: 'Subdirector Nacional CEITA' },
+    { id: 'coordinador_area', rotulo: 'Coordinador AREA' },
+    { id: 'profesional_cpi', rotulo: 'Profesional CPI' }
+  ];
+
+  const ESTADOS_ITEM = [
+    { valor: 'Nuevo', clase: 'activo-nuevo' },
+    { valor: 'Bueno', clase: 'activo-bueno' },
+    { valor: 'Malo',  clase: 'activo-malo' },
+    { valor: 'Otro',  clase: 'activo-otro' }
+  ];
+
+  // ---------- Cambio de pestaña ----------
+  const tabRegistro = document.getElementById('tabRegistro');
+  const tabEscenario = document.getElementById('tabEscenario');
+  const vistaRegistro = document.getElementById('vistaRegistro');
+  const vistaEscenario = document.getElementById('vistaEscenario');
+  const tituloApp = document.getElementById('tituloApp');
+
+  function mostrarVista(cual) {
+    const esRegistro = cual === 'registro';
+    vistaRegistro.style.display = esRegistro ? '' : 'none';
+    vistaEscenario.style.display = esRegistro ? 'none' : '';
+    tabRegistro.classList.toggle('activo', esRegistro);
+    tabEscenario.classList.toggle('activo', !esRegistro);
+    tituloApp.textContent = esRegistro ? 'Verificación de Salones' : 'Escenario de Prueba';
+    window.scrollTo(0, 0);
+  }
+  tabRegistro.addEventListener('click', () => mostrarVista('registro'));
+  tabEscenario.addEventListener('click', () => mostrarVista('escenario'));
+
+  // ---------- Estado del acta en memoria ----------
+  let itemsInfra = [];    // { nombre, incluido, estado, observaciones, fijo }
+  let itemsHard = [];
+  let pruebas = [];       // { id, fecha, descripcion, resultado, fechaReprog, foto, firmaDataUrl, nombreFirma }
+  const firmasActa = {};  // id -> { dataUrl, nombre }
+
+  function nuevoItem(nombre, fijo) {
+    return { nombre: nombre, incluido: false, estado: '', observaciones: '', fijo: !!fijo };
+  }
+
+  function inicializarItems() {
+    itemsInfra = ITEMS_INFRAESTRUCTURA.map(n => nuevoItem(n, true));
+    itemsHard = ITEMS_HARDWARE.map(n => nuevoItem(n, true));
+  }
+
+  // ---------- Render de checklist (infraestructura / hardware) ----------
+  function renderChecklist(contenedorId, lista) {
+    const cont = document.getElementById(contenedorId);
+    cont.innerHTML = '';
+    lista.forEach((item, indice) => {
+      const div = document.createElement('div');
+      div.className = 'item-checklist';
+
+      const botones = ESTADOS_ITEM.map(e =>
+        `<button type="button" data-estado="${e.valor}" class="${item.estado === e.valor ? e.clase : ''}">${e.valor}</button>`
+      ).join('');
+
+      const nombreHtml = item.fijo
+        ? `<span class="item-checklist-nombre">${item.nombre}</span>`
+        : `<input type="text" class="nombre-libre" value="${item.nombre.replace(/"/g, '&quot;')}" placeholder="Nombre del ítem" style="flex:1; margin:0;">`;
+
+      div.innerHTML = `
+        <div class="item-checklist-linea">
+          <input type="checkbox" ${item.incluido ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--verde); flex-shrink:0;">
+          ${nombreHtml}
+          ${item.fijo ? '' : '<button type="button" class="btn-quitar-item" style="background:none;border:none;color:#c0392b;font-weight:700;cursor:pointer;">✕</button>'}
+        </div>
+        <div class="segmentado4">${botones}</div>
+        <input type="text" class="obs-item" placeholder="Observaciones" value="${(item.observaciones || '').replace(/"/g, '&quot;')}" style="margin-top:8px;">
+      `;
+
+      div.querySelector('input[type="checkbox"]').addEventListener('change', ev => {
+        item.incluido = ev.target.checked;
+      });
+
+      div.querySelectorAll('.segmentado4 button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          item.estado = item.estado === btn.dataset.estado ? '' : btn.dataset.estado;
+          // Al marcar un estado, el ítem cuenta como incluido en el acta.
+          if (item.estado) item.incluido = true;
+          renderChecklist(contenedorId, lista);
+        });
+      });
+
+      div.querySelector('.obs-item').addEventListener('input', ev => {
+        item.observaciones = ev.target.value;
+      });
+
+      const inputNombre = div.querySelector('.nombre-libre');
+      if (inputNombre) {
+        inputNombre.addEventListener('input', ev => { item.nombre = ev.target.value; });
+      }
+      const btnQuitar = div.querySelector('.btn-quitar-item');
+      if (btnQuitar) {
+        btnQuitar.addEventListener('click', () => {
+          lista.splice(indice, 1);
+          renderChecklist(contenedorId, lista);
+        });
+      }
+
+      cont.appendChild(div);
+    });
+  }
+
+  document.getElementById('btnAgregarInfra').addEventListener('click', () => {
+    itemsInfra.push(nuevoItem('', false));
+    renderChecklist('listaInfraestructura', itemsInfra);
+  });
+  document.getElementById('btnAgregarHardware').addEventListener('click', () => {
+    itemsHard.push(nuevoItem('', false));
+    renderChecklist('listaHardware', itemsHard);
+  });
+
+  // ---------- Firma en canvas (dibujar con dedo o mouse) ----------
+  function montarFirma(canvas, onCambio) {
+    const ctx = canvas.getContext('2d');
+    let dibujando = false;
+    let hayTrazo = false;
+
+    // Ajusta la resolución real del canvas al tamaño en pantalla para
+    // que el trazo no salga pixelado ni desplazado.
+    function ajustarTamano() {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width) return;
+      const dpr = window.devicePixelRatio || 1;
+      const datos = hayTrazo ? canvas.toDataURL() : null;
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#111';
+      if (datos) {
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+        img.src = datos;
+      }
+    }
+
+    function posicion(ev) {
+      const rect = canvas.getBoundingClientRect();
+      const punto = ev.touches ? ev.touches[0] : ev;
+      return { x: punto.clientX - rect.left, y: punto.clientY - rect.top };
+    }
+
+    function iniciar(ev) {
+      ev.preventDefault();
+      dibujando = true;
+      const p = posicion(ev);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+    function mover(ev) {
+      if (!dibujando) return;
+      ev.preventDefault();
+      const p = posicion(ev);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      hayTrazo = true;
+    }
+    function terminar() {
+      if (!dibujando) return;
+      dibujando = false;
+      if (hayTrazo && onCambio) onCambio(canvas.toDataURL('image/png'));
+    }
+
+    canvas.addEventListener('mousedown', iniciar);
+    canvas.addEventListener('mousemove', mover);
+    window.addEventListener('mouseup', terminar);
+    canvas.addEventListener('touchstart', iniciar, { passive: false });
+    canvas.addEventListener('touchmove', mover, { passive: false });
+    canvas.addEventListener('touchend', terminar);
+
+    ajustarTamano();
+    window.addEventListener('resize', ajustarTamano);
+
+    return {
+      limpiar() {
+        const rect = canvas.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+        hayTrazo = false;
+        if (onCambio) onCambio('');
+      },
+      tieneTrazo() { return hayTrazo; }
+    };
+  }
+
+  function bloqueFirmaHTML(idCanvas, rotulo, idNombre) {
+    return `
+      <label>${rotulo}</label>
+      <input type="text" id="${idNombre}" placeholder="Nombre de quien firma" style="margin-bottom:8px;">
+      <div class="zona-firma"><canvas id="${idCanvas}"></canvas></div>
+      <div class="firma-botones"><button type="button" data-limpiar="${idCanvas}">Borrar firma</button></div>
+    `;
+  }
+
+  // ---------- Firmas del acta (cierre) ----------
+  (function renderFirmasActa() {
+    const cont = document.getElementById('listaFirmas');
+    cont.innerHTML = FIRMAS_ACTA.map((f, i) =>
+      `<div style="${i ? 'margin-top:18px;' : ''}">${bloqueFirmaHTML('canvasFirma_' + f.id, f.rotulo, 'nombreFirma_' + f.id)}</div>`
+    ).join('');
+
+    FIRMAS_ACTA.forEach(f => {
+      firmasActa[f.id] = { dataUrl: '', nombre: '', rotulo: f.rotulo };
+      const canvas = document.getElementById('canvasFirma_' + f.id);
+      const control = montarFirma(canvas, dataUrl => { firmasActa[f.id].dataUrl = dataUrl; });
+      cont.querySelector(`[data-limpiar="canvasFirma_${f.id}"]`)
+         .addEventListener('click', () => control.limpiar());
+      document.getElementById('nombreFirma_' + f.id)
+         .addEventListener('input', ev => { firmasActa[f.id].nombre = ev.target.value; });
+    });
+  })();
+
+  // ---------- Bloques de prueba (Fase II) ----------
+  let contadorPrueba = 0;
+
+  function agregarPrueba() {
+    contadorPrueba++;
+    const prueba = {
+      id: 'p' + contadorPrueba,
+      fecha: new Date().toISOString().slice(0, 10),
+      descripcion: '',
+      resultado: '',
+      fechaReprog: '',
+      foto: '',
+      firmaDataUrl: '',
+      nombreFirma: ''
+    };
+    pruebas.push(prueba);
+    renderPruebas();
+  }
+
+  function renderPruebas() {
+    const cont = document.getElementById('listaPruebas');
+    cont.innerHTML = '';
+
+    pruebas.forEach((prueba, indice) => {
+      const div = document.createElement('div');
+      div.className = 'bloque-prueba';
+      div.innerHTML = `
+        <div class="bloque-prueba-titulo">
+          <b>Prueba ${indice + 1}</b>
+          <button type="button" class="btn-quitar-prueba">Quitar</button>
+        </div>
+
+        <label>Fecha de la prueba</label>
+        <input type="date" class="p-fecha" value="${prueba.fecha}">
+
+        <label>Descripción de la prueba</label>
+        <textarea class="p-desc" rows="3" placeholder="Qué se probó y cómo">${prueba.descripcion}</textarea>
+
+        <label>Evidencia fotográfica</label>
+        <div class="zona-foto" id="zonaFotoPrueba_${prueba.id}"></div>
+
+        <label style="margin-top:14px;">Resultado</label>
+        <div class="toggle-aseo toggle-resultado">
+          <button type="button" class="exitosa ${prueba.resultado === 'Exitosa' ? 'activo' : ''}" data-valor="Exitosa">Exitosa</button>
+          <button type="button" class="fallida ${prueba.resultado === 'Fallida' ? 'activo' : ''}" data-valor="Fallida">Fallida</button>
+        </div>
+
+        <div class="campo-reprog" style="display:${prueba.resultado === 'Fallida' ? '' : 'none'}; margin-top:12px;">
+          <label>Fecha de reprogramación de la prueba</label>
+          <input type="date" class="p-reprog" value="${prueba.fechaReprog}">
+        </div>
+
+        <div style="margin-top:16px;">
+          ${bloqueFirmaHTML('canvasPrueba_' + prueba.id, 'Firma del encargado del procedimiento', 'nombrePrueba_' + prueba.id)}
+        </div>
+      `;
+      cont.appendChild(div);
+
+      div.querySelector('.btn-quitar-prueba').addEventListener('click', () => {
+        pruebas.splice(indice, 1);
+        renderPruebas();
+      });
+      div.querySelector('.p-fecha').addEventListener('input', ev => { prueba.fecha = ev.target.value; });
+      div.querySelector('.p-desc').addEventListener('input', ev => { prueba.descripcion = ev.target.value; });
+      div.querySelector('.p-reprog').addEventListener('input', ev => { prueba.fechaReprog = ev.target.value; });
+
+      div.querySelectorAll('.toggle-resultado button').forEach(btn => {
+        btn.addEventListener('click', () => {
+          prueba.resultado = btn.dataset.valor;
+          renderPruebas();
+        });
+      });
+
+      // Foto de evidencia, con la misma marca de agua de fecha/hora
+      // que usan las fotos del módulo de Registro.
+      crearManejadorFoto(
+        'zonaFotoPrueba_' + prueba.id,
+        dataUrl => { prueba.foto = dataUrl; },
+        () => { prueba.foto = ''; }
+      );
+      if (prueba.foto) {
+        const zona = document.getElementById('zonaFotoPrueba_' + prueba.id);
+        zona.innerHTML = `<img src="${prueba.foto}" alt="Evidencia de la prueba">`;
+      }
+
+      const nombreInput = document.getElementById('nombrePrueba_' + prueba.id);
+      nombreInput.value = prueba.nombreFirma;
+      nombreInput.addEventListener('input', ev => { prueba.nombreFirma = ev.target.value; });
+
+      const canvas = document.getElementById('canvasPrueba_' + prueba.id);
+      const control = montarFirma(canvas, dataUrl => { prueba.firmaDataUrl = dataUrl; });
+      div.querySelector(`[data-limpiar="canvasPrueba_${prueba.id}"]`)
+         .addEventListener('click', () => control.limpiar());
+    });
+  }
+
+  document.getElementById('btnAgregarPrueba').addEventListener('click', agregarPrueba);
+
+  // ---------- Sugerencias que se van aprendiendo del uso ----------
+  // Como todavía no hay una base de salones, la app va guardando lo que
+  // se escribe y lo ofrece como autocompletado la próxima vez.
+  const CLAVE_SUGERENCIAS = 'escenario_prueba_sugerencias';
+
+  function leerSugerencias() {
+    try { return JSON.parse(localStorage.getItem(CLAVE_SUGERENCIAS)) || {}; }
+    catch { return {}; }
+  }
+  function guardarSugerencia(campo, valor) {
+    if (!valor || !valor.trim()) return;
+    const sug = leerSugerencias();
+    const lista = sug[campo] || [];
+    if (!lista.includes(valor.trim())) {
+      lista.push(valor.trim());
+      sug[campo] = lista.slice(-40);
+      try { localStorage.setItem(CLAVE_SUGERENCIAS, JSON.stringify(sug)); } catch (err) { /* sin espacio */ }
+    }
+  }
+  function pintarSugerencias() {
+    const sug = leerSugerencias();
+    const mapa = {
+      ubicacion: 'listaSalones',
+      tipologia: 'listaTipologias',
+      coordinador: 'listaCoordinadores',
+      proveedor: 'listaProveedores'
+    };
+    Object.keys(mapa).forEach(campo => {
+      const datalist = document.getElementById(mapa[campo]);
+      datalist.innerHTML = (sug[campo] || [])
+        .map(v => `<option value="${v.replace(/"/g, '&quot;')}">`).join('');
+    });
+  }
+
+  // ---------- Consecutivo de acta ----------
+  // Se arma con el año y un contador local, y el backend confirma el
+  // número definitivo para que no se repita entre dispositivos.
+  function siguienteNumeroActa() {
+    const anio = new Date().getFullYear();
+    let n = parseInt(localStorage.getItem('escenario_prueba_consecutivo') || '0', 10);
+    n = n + 1;
+    return `${anio}-${String(n).padStart(3, '0')}`;
+  }
+  function confirmarConsecutivo() {
+    let n = parseInt(localStorage.getItem('escenario_prueba_consecutivo') || '0', 10);
+    try { localStorage.setItem('escenario_prueba_consecutivo', String(n + 1)); } catch (err) { /* sin espacio */ }
+  }
+
+  // ---------- Reinicio del formulario del acta ----------
+  function reiniciarActa() {
+    inicializarItems();
+    renderChecklist('listaInfraestructura', itemsInfra);
+    renderChecklist('listaHardware', itemsHard);
+
+    pruebas = [];
+    contadorPrueba = 0;
+    agregarPrueba(); // el acta arranca con una prueba lista para llenar
+
+    document.getElementById('formEscenario').reset();
+    document.getElementById('esc_fecha').value = new Date().toISOString().slice(0, 10);
+    document.getElementById('esc_acta').value = siguienteNumeroActa();
+    document.getElementById('esc_observaciones').value = '';
+
+    FIRMAS_ACTA.forEach(f => {
+      firmasActa[f.id].dataUrl = '';
+      firmasActa[f.id].nombre = '';
+      const canvas = document.getElementById('canvasFirma_' + f.id);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('nombreFirma_' + f.id).value = '';
+    });
+
+    document.querySelectorAll('#grupoIntervencion label').forEach(l => l.classList.remove('marcado'));
+    pintarSugerencias();
+  }
+
+  document.querySelectorAll('#grupoIntervencion input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('#grupoIntervencion label').forEach(l => l.classList.remove('marcado'));
+      if (radio.checked) radio.closest('label').classList.add('marcado');
+    });
+  });
+
+  // ---------- Armar y enviar el acta ----------
+  function itemsDiligenciados(lista) {
+    return lista
+      .filter(i => i.incluido && i.nombre.trim())
+      .map(i => ({
+        nombre: i.nombre.trim(),
+        estado: i.estado || '',
+        observaciones: i.observaciones || ''
+      }));
+  }
+
+  document.getElementById('formEscenario').addEventListener('submit', async ev => {
+    ev.preventDefault();
+
+    const btn = document.getElementById('btnGuardarEscenario');
+    const msg = document.getElementById('mensajeEscenario');
+
+    const intervencionSel = document.querySelector('#grupoIntervencion input:checked');
+    if (!intervencionSel) {
+      msg.className = 'mensaje error';
+      msg.textContent = 'Selecciona el tipo de intervención.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    const pruebasValidas = pruebas.filter(p => p.descripcion.trim() || p.foto || p.resultado);
+    if (pruebasValidas.length === 0) {
+      msg.className = 'mensaje error';
+      msg.textContent = 'Registra al menos una prueba con descripción, evidencia o resultado.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    const ubicacion = document.getElementById('esc_ubicacion').value.trim();
+    const tipologia = document.getElementById('esc_tipologia').value.trim();
+    const coordinador = document.getElementById('esc_coordinador').value.trim();
+    const proveedor = document.getElementById('esc_proveedor').value.trim();
+
+    const acta = {
+      _tipo: 'escenario_prueba',
+      _id: 'e_' + Date.now() + '_' + Math.random().toString(36).slice(2, 10),
+      acta_numero: document.getElementById('esc_acta').value,
+      fecha: document.getElementById('esc_fecha').value,
+      ubicacion: ubicacion,
+      tipologia: tipologia,
+      planta_fisica: document.getElementById('esc_planta').value.trim(),
+      tecnologia: document.getElementById('esc_tecnologia').value.trim(),
+      coordinador: coordinador,
+      proveedor: proveedor,
+      tipo_intervencion: intervencionSel.value,
+      infraestructura: itemsDiligenciados(itemsInfra),
+      hardware: itemsDiligenciados(itemsHard),
+      observaciones: document.getElementById('esc_observaciones').value.trim(),
+      pruebas: pruebasValidas.map((p, i) => ({
+        numero: i + 1,
+        fecha: p.fecha,
+        descripcion: p.descripcion.trim(),
+        resultado: p.resultado,
+        fecha_reprogramacion: p.resultado === 'Fallida' ? p.fechaReprog : '',
+        nombre_firma: p.nombreFirma.trim(),
+        firma: p.firmaDataUrl,
+        foto: p.foto
+      })),
+      firmas: FIRMAS_ACTA.map(f => ({
+        rotulo: f.rotulo,
+        nombre: firmasActa[f.id].nombre.trim(),
+        firma: firmasActa[f.id].dataUrl
+      }))
+    };
+
+    btn.disabled = true;
+    btn.textContent = 'Guardando...';
+    msg.style.display = 'none';
+
+    try {
+      await enviarRegistro(acta);
+      confirmarConsecutivo();
+      guardarSugerencia('ubicacion', ubicacion);
+      guardarSugerencia('tipologia', tipologia);
+      guardarSugerencia('coordinador', coordinador);
+      guardarSugerencia('proveedor', proveedor);
+      guardarHistorialActa(acta);
+      msg.className = 'mensaje ok';
+      msg.textContent = 'Acta guardada. Ya puedes descargar el documento desde el historial o desde el Sheet.';
+      msg.style.display = 'block';
+      reiniciarActa();
+      renderHistorialActas();
+    } catch (err) {
+      // Sin conexión o envío fallido: el acta queda en la misma cola
+      // offline del módulo de Registro y se sube sola al volver la señal.
+      const cola = leerCola();
+      if (cola.length >= 8) {
+        msg.className = 'mensaje error';
+        msg.textContent = 'Ya hay 8 envíos esperando y no caben más en el dispositivo. Busca señal, espera a que se suban y vuelve a guardar esta acta.';
+        msg.style.display = 'block';
+        return;
+      }
+      cola.push(acta);
+      const guardado = guardarCola(cola);
+      msg.className = guardado ? 'mensaje ok' : 'mensaje error';
+      msg.textContent = guardado
+        ? 'Sin conexión: el acta quedó guardada y se subirá sola cuando vuelva la señal.'
+        : 'No hay espacio en el dispositivo para guardar el acta. Conéctate a internet e inténtalo de nuevo.';
+      msg.style.display = 'block';
+      if (guardado) { confirmarConsecutivo(); guardarHistorialActa(acta); reiniciarActa(); renderHistorialActas(); }
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar acta';
+      actualizarEstadoConexion();
+    }
+  });
+
+  // ---------- Historial local de actas ----------
+  const CLAVE_ACTAS = 'escenario_prueba_enviadas';
+
+  function guardarHistorialActa(acta) {
+    let lista = [];
+    try { lista = JSON.parse(localStorage.getItem(CLAVE_ACTAS)) || []; } catch { lista = []; }
+    // Se guarda sin imágenes para no llenar el almacenamiento del navegador.
+    lista.unshift({
+      _id: acta._id,
+      acta_numero: acta.acta_numero,
+      fecha: acta.fecha,
+      ubicacion: acta.ubicacion,
+      tipo_intervencion: acta.tipo_intervencion,
+      total_pruebas: acta.pruebas.length
+    });
+    lista = lista.slice(0, 15);
+    try { localStorage.setItem(CLAVE_ACTAS, JSON.stringify(lista)); } catch (err) { /* sin espacio */ }
+  }
+
+  function renderHistorialActas() {
+    const cont = document.getElementById('historialEscenario');
+    let lista = [];
+    try { lista = JSON.parse(localStorage.getItem(CLAVE_ACTAS)) || []; } catch { lista = []; }
+    if (!lista.length) {
+      cont.innerHTML = '<p style="color:var(--gris); font-size:13.5px; margin:0;">Todavía no has guardado actas en este dispositivo.</p>';
+      return;
+    }
+    cont.innerHTML = lista.map(a => `
+      <div class="historial-item">
+        <div class="historial-info">
+          <b>Acta ${a.acta_numero} · ${a.ubicacion || 'Sin ubicación'}</b>
+          <span>${a.fecha} · ${a.tipo_intervencion} · ${a.total_pruebas} prueba(s)</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---------- Arranque del módulo ----------
+  reiniciarActa();
+  renderHistorialActas();
 </script>
 
 </body>
